@@ -7,6 +7,7 @@ import { BikeEntity } from "../src/bikes/entities/bike.entity";
 import { configureApp } from "../src/configure-app";
 import type { PurchasedBikeSellResponseDto } from "../src/customers/dto/bike-sell-response.dto";
 import type { CustomerResponseDto } from "../src/customers/dto/customer-response.dto";
+import type { CustomersPageResponseDto } from "../src/customers/dto/customers-page-response.dto";
 import { BikeSellEntity } from "../src/customers/entities/bike-sell.entity";
 import { CustomerEntity } from "../src/customers/entities/customer.entity";
 import { databaseOptions } from "../src/database/database-options";
@@ -78,7 +79,9 @@ describe("Bike shop API", () => {
       .get("/customers")
       .expect(200);
     expect(
-      (all.body as CustomerResponseDto[]).map((item) => item.lastName),
+      (all.body as CustomersPageResponseDto).customers.map(
+        (item) => item.lastName,
+      ),
     ).toEqual(["Bernard", "Durand", "Martin", "Moreau"]);
     await request(app.getHttpServer())
       .patch(`/customers/${customer.id}`)
@@ -100,6 +103,42 @@ describe("Bike shop API", () => {
     await request(app.getHttpServer())
       .get(`/customers/${customer.id}`)
       .expect(404);
+  });
+
+  it("paginates customers and keeps the total count", async () => {
+    const lastNames = async (query: string) => {
+      const response = await request(app.getHttpServer())
+        .get(`/customers${query}`)
+        .expect(200);
+      const body = response.body as CustomersPageResponseDto;
+      expect(Object.keys(body).sort()).toEqual(["customers", "totalCount"]);
+      expect(body.totalCount).toBe(3);
+      return body.customers.map((customer) => customer.lastName);
+    };
+    expect(await lastNames("")).toEqual(["Bernard", "Durand", "Martin"]);
+    expect(await lastNames("?limit=2")).toEqual(["Bernard", "Durand"]);
+    expect(await lastNames("?page=2&limit=2")).toEqual(["Martin"]);
+    expect(await lastNames("?page=3&limit=2")).toEqual([]);
+    expect(await lastNames("?limit=50")).toHaveLength(3);
+    expect(await lastNames(`?page=${Number.MAX_SAFE_INTEGER}`)).toEqual([]);
+  });
+
+  it.each([
+    "page=0",
+    "page=-1",
+    "page=1.5",
+    "page=abc",
+    "page=",
+    "page=1e1",
+    "page=1&page=2",
+    "page=99999999999999999999",
+    "limit=0",
+    "limit=-1",
+    "limit=1.5",
+    "limit=abc",
+    "limit=51",
+  ])("rejects the invalid customer pagination %s", async (query) => {
+    await request(app.getHttpServer()).get(`/customers?${query}`).expect(400);
   });
 
   it("enforces email uniqueness on creation and update", async () => {

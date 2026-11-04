@@ -1,12 +1,22 @@
-import { Skeleton, Space } from "antd";
+import { Pagination, Skeleton, Space } from "antd";
 import { useEffect } from "react";
-import { useCustomersProvider } from "../providers/useCustomersProvider";
+import {
+  CUSTOMERS_PAGE_SIZE,
+  useCustomersProvider,
+} from "../providers/useCustomersProvider";
 import { AddCustomerButton } from "./AddCustomerButton";
 import { CustomerListItem } from "./CustomerListItem";
 
 export const CustomersList = () => {
-  const { customers, deleteCustomer, createCustomer, isLoading, load } =
-    useCustomersProvider();
+  const {
+    customers,
+    totalCount,
+    page,
+    deleteCustomer,
+    createCustomer,
+    isLoading,
+    load,
+  } = useCustomersProvider();
 
   useEffect(() => {
     load();
@@ -26,6 +36,13 @@ export const CustomersList = () => {
           />
         ))
       )}
+      <Pagination
+        current={page}
+        pageSize={CUSTOMERS_PAGE_SIZE}
+        total={totalCount}
+        showSizeChanger={false}
+        onChange={(newPage) => load(newPage)}
+      />
     </Space>
   );
 };
