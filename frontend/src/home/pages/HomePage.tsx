@@ -1,4 +1,8 @@
-import { ContactsOutlined, ShoppingOutlined } from "@ant-design/icons";
+import {
+  ContactsOutlined,
+  ShoppingCartOutlined,
+  ShoppingOutlined,
+} from "@ant-design/icons";
 import { Card, Col, Row, Space } from "antd";
 import Paragraph from "antd/es/typography/Paragraph";
 import Title from "antd/es/typography/Title";
@@ -47,6 +51,25 @@ export const HomePage = () => {
             title={
               <Space>
                 <ShoppingOutlined />
+                Bikes
+              </Space>
+            }
+            style={{ height: "100%" }}
+          >
+            <Paragraph>
+              Browse the bike catalog, add new models and keep their details up
+              to date.
+            </Paragraph>
+            <ButtonLink to="/bikes" type="primary">
+              See bikes
+            </ButtonLink>
+          </Card>
+        </Col>
+        <Col xs={24} md={12}>
+          <Card
+            title={
+              <Space>
+                <ShoppingCartOutlined />
                 Purchases
               </Space>
             }
